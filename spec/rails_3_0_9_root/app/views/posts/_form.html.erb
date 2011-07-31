@@ -1,0 +1,41 @@
+<%= form_for(@post) do |f| %>
+  <% if @post.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@post.errors.count, "error") %> prohibited this post from being saved:</h2>
+
+      <ul>
+      <% @post.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name %><br />
+    <%= f.text_field :name %>
+  </div>
+  <div class="field">
+    <%= f.label :body %><br />
+    <%= f.text_area :body %>
+  </div>
+  <div class="actions">
+    <% if @services %>
+      <h3>Post to:</h3>
+      <% for social_service in @services do %>
+        <%= check_box_tag "services[#{social_service.id}][id]", social_service.id %>
+        <%= "#{social_service.provider} #{social_service.uid}" %>
+        <% if @service_errors && @service_errors[social_service.id] %>
+          Service want captcha from you:<br/>
+          <% if @service_errors[social_service.id][:captcha] %>
+            <%= image_tag @service_errors[social_service.id][:captcha][:link] %><br/>
+            <%= hidden_field_tag "services[#{social_service.id}][captcha_id]",@service_errors[social_service.id][:captcha][:id] %>
+            <%= text_field_tag "services[#{social_service.id}][captcha]" %><br/>
+          <% end %>
+        <% end %>
+        <br/>
+      <% end %>
+    <% end %>
+    <%= f.submit %>
+  </div>
+<% end %>

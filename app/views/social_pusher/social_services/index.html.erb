@@ -1,0 +1,36 @@
+<h1>Listing social_services</h1>
+
+<table>
+  <tr>
+    <th>User</th>
+    <th>Provider</th>
+    <th>Uid</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @social_services.each do |social_service| %>
+  <tr>
+    <td><%= social_service.user_id %></td>
+    <td>
+      <%= social_service.provider %>
+      <% if social_service.provider == "facebook" %>
+        <%= form_for social_service do |f| %>
+          <%= f.label :fb_page_id %>
+          <%= f.text_field :fb_page_id %>
+          <%= f.submit 'Update' %>
+        <% end %>
+      <% end %>
+    </td>
+    <td><%= social_service.uid %></td>
+    <td><%= link_to 'Destroy', social_service, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Twitter connection', '/auth/twitter' %><br/>
+<%= link_to 'New Facebook connection', '/auth/facebook' %><br/>
+<%= link_to 'New VKontakte connection', '/auth/vkontakte' %><br/>
