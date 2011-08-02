@@ -32,7 +32,7 @@ module SocialPusher
 
         def get_social_data_for_event
           {
-            :body => self.body,
+            :name => self.name,
             :start_time => self.date.to_time
           }
         end
@@ -48,21 +48,31 @@ module SocialPusher
           "SocialPusher::#{provider_class}::#{act_as_class}".constantize.new(service_params)
         end
 
+        def collect_social_data(social_service, url)
+          data = get_social_data
+          data.merge!({:url => url}) if url
+          if social_service["captcha"] && social_service["captcha_id"]
+            data.merge!({
+              :captcha_sid => social_service["captcha_id"],
+              :captcha_key => social_service["captcha"]
+            })
+          end
+          data
+        end
+
+        def provider_accepted?(social_service)
+          self.social_pusher_to.include?(social_service.provider.to_sym)
+        end
+
         def post_to_social(services, url = nil)
-          if self.user && self.user.social_services
-            service_errors = {}
-            services.each_value do |social_service|
-              if social_service["id"]
-                sid = social_service["id"].to_i
-                ss = self.user.social_services.find(sid)
-                data = get_social_data
-                data.merge!({:url => url}) if url
-                if social_service["captcha"] && social_service["captcha_id"]
-                  data.merge!({
-                    :captcha_sid => social_service["captcha_id"],
-                    :captcha_key => social_service["captcha"]
-                  })
-                end
+          return if !self.user || !self.user.social_services
+          service_errors = {}
+          services.each_value do |social_service|
+            if social_service["id"]
+              sid = social_service["id"].to_i
+              ss = self.user.social_services.find(sid)
+              if ss && provider_accepted?(ss)
+                data = collect_social_data(social_service, url)
                 poster = get_social_poster(ss)
                 begin
                   res = poster.create(data)
@@ -72,12 +82,12 @@ module SocialPusher
                     end
                   end
                 rescue => e
-                  service_errors[sid] = { :message => e }
+                  service_errors[sid] = { :message => e.backtrace }
                 end
               end
             end
-            service_errors
           end
+          service_errors
         end
 
       end

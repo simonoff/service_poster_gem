@@ -10,38 +10,34 @@ describe SocialService do
       end
       @user = Factory(:user)
       @post = Factory(:post, :user => @user)
-      @post.post_to_social
       @twitter = Factory(:twitter_service, :user => @user)
       @facebook = Factory(:facebook_service, :user => @user)
       @vkontakte = Factory(:vkontakte_service, :user => @user)
     end
 
-    describe 'to twitter' do
+    shared_examples_for "social post" do
       it 'should post' do
-        lambda {@twitter.push_post(@post.id)}.should_not raise_error
+        lambda { subject }.should_not raise_error
       end
+
+      it "should post without errors" do
+        subject.should eql Hash.new
+      end
+    end
+
+    describe 'to twitter' do
+      subject { @post.post_to_social({ @twitter.id => {"id" => @twitter.id}}, 'http://socialposter.local/testurl')}
+      it_behaves_like "social post"
     end
 
     describe 'to facebook' do
-      it 'should post' do
-        lambda {@facebook.push_post(@post.id)}.should_not raise_error
-      end
+      subject { @post.post_to_social({ @facebook.id => {"id" => @facebook.id}}) }
+      it_behaves_like "social post"
     end
 
     describe 'to vkontakte' do
-      it 'should not raise error' do
-        lambda {@vkontakte.push_post(@post.id)}.should_not raise_error
-      end
-
-      it 'should post' do
-        res = @vkontakte.push_post(@post.id)
-        if res && res.is_a?(Array)
-          if res[0] == :error
-            res[1].should be_a_kind_of(Hash)
-            res[1].keys.sort.should eql [:link, :id].sort
-          end
-        end
-      end
+      subject { @post.post_to_social({ @vkontakte.id => {"id" => @vkontakte.id}}, 'http://socialposter/testurl2') }
+      it_behaves_like "social post"
     end
 
   end
@@ -60,31 +56,18 @@ describe SocialService do
     end
 
     describe 'to twitter' do
-      it 'should post' do
-        lambda {@twitter.push_event(@event.id)}.should_not raise_error
-      end
+      subject { @event.post_to_social({ @twitter.id => {"id" => @twitter.id}}, 'http://socialposter.local/testurl')}
+      it_behaves_like "social post"
     end
 
     describe 'to facebook' do
-      it 'should post' do
-        lambda {@facebook.push_event(@event.id)}.should_not raise_error
-      end
+      subject { @event.post_to_social({ @facebook.id => {"id" => @facebook.id}}) }
+      it_behaves_like "social post"
     end
 
     describe 'to vkontakte' do
-      it 'should not raise error' do
-        lambda {@vkontakte.push_event(@event.id)}.should_not raise_error
-      end
-
-      it 'should post' do
-        res = @vkontakte.push_event(@event.id)
-        if res && res.is_a?(Array)
-          if res[0] == :error
-            res[1].should be_a_kind_of(Hash)
-            res[1].keys.sort.should eql [:link, :id].sort
-          end
-        end
-      end
+      subject { @event.post_to_social({ @vkontakte.id => {"id" => @vkontakte.id}}, 'http://socialposter.local/testurl')}
+      it_behaves_like "social post"
     end
 
   end

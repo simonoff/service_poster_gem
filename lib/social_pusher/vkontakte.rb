@@ -1,16 +1,20 @@
 module SocialPusher
   module Vkontakte
 
-    class Post
+    class CannotCreate < Exception; end
 
-      class CannotCreatePost < Exception; end
-
+    class Base
       def initialize(params)
         @token = params[:token]
       end
 
-      def create(body, captcha = {})
-        res = API.request(@token,'wall.post', {:message => body}.merge(captcha))
+      def collect_data(data)
+        {}
+      end
+
+      def create(data)
+        post_data = collect_data(data)
+        res = API.request(@token,'wall.post', post_data, true)
         if res && res['response']
           return res['response']['post_id']
         end
@@ -20,19 +24,26 @@ module SocialPusher
             return [:error, captcha]
           end
         end
-        raise CannotCreatePost
+        raise CannotCreate
       end
-
     end
 
-    class Event
-
-      class CannotCreateEvent < Exception; end
-
-      def initialize(params)
-        @token = params[:token]
+    class Post < Base
+      def collect_data(data)
+        post_data = {
+          :message => data[:body]
+        }
+        if data[:captcha_key] && data[:captcha_sid]
+          post_data.merge!({
+            :captcha_key => data[:captcha_key],
+            :captcha_sid => data[:captcha_sid]
+          })
+        end
+        post_data
       end
+    end
 
+    class Event < Base
       def make_event_post(event_fields)
         body = "Event:"
         body << event_fields[:name]
@@ -42,7 +53,7 @@ module SocialPusher
         body
       end
 
-      def create(data)
+      def collect_data(data)
         body = make_event_post(data)
         post_data = {:message => body}
         if data[:captcha_key] && data[:captcha_sid]
@@ -51,23 +62,11 @@ module SocialPusher
             :captcha_sid => data[:captcha_sid]
           })
         end
-        res = API.request(@token,'wall.post', post_data )
-        if res && res['response']
-          return res['response']['post_id']
-        end
-        if res["error"]
-          captcha = Captcha.get(res["error"])
-          if captcha
-            return [:error, captcha]
-          end
-        end
-        raise CannotCreateEvent
+        post_data
       end
-
     end
 
     class Captcha
-
       def self.get(error)
         if error["error_code"] == 14
           {
@@ -76,7 +75,6 @@ module SocialPusher
           }
         end
       end
-
     end
 
     class API < ::SocialPusher::HTTP
