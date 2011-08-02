@@ -38,12 +38,12 @@ module SocialPusher
         body << event_fields[:name]
         body << "will start "
         body << event_fields[:start_time].to_s
+        body << " details at #{event_fields[:url]}"
         body
       end
 
-      def create(data, url)
+      def create(data)
         body = make_event_post(data)
-        body << " #{url}"
         post_data = {:message => body}
         if data[:captcha_key] && data[:captcha_sid]
           post_data.merge!({

@@ -19,7 +19,6 @@ module SocialPusher
       end
 
       module InstanceMethods
-
         def get_social_data
           __send__("get_social_data_for_#{self.social_pusher_as.to_s}".to_sym)
         end
@@ -49,7 +48,7 @@ module SocialPusher
           "SocialPusher::#{provider_class}::#{act_as_class}".constantize.new(service_params)
         end
 
-        def post_to_social(services)
+        def post_to_social(services, url = nil)
           if self.user && self.user.social_services
             service_errors = {}
             services.each_value do |social_service|
@@ -57,21 +56,24 @@ module SocialPusher
                 sid = social_service["id"].to_i
                 ss = self.user.social_services.find(sid)
                 data = get_social_data
-                require 'pp'
+                data.merge!({:url => url}) if url
+                if social_service["captcha"] && social_service["captcha_id"]
+                  data.merge!({
+                    :captcha_sid => social_service["captcha_id"],
+                    :captcha_key => social_service["captcha"]
+                  })
+                end
                 poster = get_social_poster(ss)
                 begin
                   res = poster.create(data)
+                  if res.is_a?(Array)
+                    if res[0] == :captcha
+                      service_errors[sid] = { :captcha => res[1]}
+                    end
+                  end
+                rescue => e
+                  service_errors[sid] = { :message => e }
                 end
-                #begin
-                #  res = ss.push_post(id, social_service["captcha"], social_service["captcha_id"])
-                #  if res.is_a?(Array)
-                #    if res[0] == :captcha
-                #      service_errors[sid] = { :captcha => res[1]}
-                #    end
-                #  end
-                #rescue => e
-                #  service_errors[sid] = { :message => e }
-                #end
               end
             end
             service_errors
