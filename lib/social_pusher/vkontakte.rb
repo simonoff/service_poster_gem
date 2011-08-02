@@ -5,8 +5,8 @@ module SocialPusher
 
       class CannotCreatePost < Exception; end
 
-      def initialize(token)
-        @token = token
+      def initialize(params)
+        @token = params[:token]
       end
 
       def create(body, captcha = {})
@@ -29,8 +29,8 @@ module SocialPusher
 
       class CannotCreateEvent < Exception; end
 
-      def initialize(token)
-        @token = token
+      def initialize(params)
+        @token = params[:token]
       end
 
       def make_event_post(event_fields)

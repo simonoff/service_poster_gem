@@ -10,6 +10,7 @@ describe SocialService do
       end
       @user = Factory(:user)
       @post = Factory(:post, :user => @user)
+      @post.post_to_social
       @twitter = Factory(:twitter_service, :user => @user)
       @facebook = Factory(:facebook_service, :user => @user)
       @vkontakte = Factory(:vkontakte_service, :user => @user)

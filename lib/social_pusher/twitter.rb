@@ -1,21 +1,23 @@
 module SocialPusher
   module Twitter
 
-    class Post
+    class Base
       include ActionView::Helpers::TextHelper
 
       class Unauthorized < Exception; end
 
-      def initialize(token, secret)
+      def initialize(params)
         @client = ::TwitterOAuth::Client.new(
             :consumer_key => Rails.application.config.twitter[:consumer_token],
             :consumer_secret => Rails.application.config.twitter[:consumer_secret],
-            :token => token,
-            :secret => secret
+            :token => params[:token],
+            :secret => params[:secret]
         )
       end
 
-      def create(name, url)
+      def create(data)
+        name = data[:name]
+        url = data[:url]
         raise Unauthorized unless @client.authorized?
         bitly = ::Bitly.new(Rails.application.config.bitly[:username], Rails.application.config.bitly[:api_key])
         shorten = bitly.shorten(url)
@@ -25,6 +27,9 @@ module SocialPusher
       end
 
     end
+
+    class Post < Base; end
+    class Event < Base; end
 
   end
 end

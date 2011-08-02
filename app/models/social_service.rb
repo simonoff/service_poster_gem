@@ -8,50 +8,20 @@ class SocialService < ActiveRecord::Base
     end
 
     def get_auth_info(omniauth)
-      case omniauth["provider"]
-      when "vkontakte"
-        get_vkontakte_data(omniauth)
-      when "twitter"
-        get_twitter_data(omniauth)
-      when "facebook"
-        get_facebook_data(omniauth)
-      end
-    rescue
-    end
-
-    def get_facebook_data(omniauth)
-      uid = omniauth["uid"].to_s
-      token = omniauth["credentials"]["token"]
-      { :uid => uid, :token => token, :provider => "facebook" }
-    end
-
-    def get_twitter_data(omniauth)
       uid = omniauth["uid"].to_s
       token = omniauth["credentials"]["token"]
       secret = omniauth["credentials"]["secret"]
-      { :uid => uid, :token => token, :secret => secret, :provider => "twitter" }
-    end
-
-    def get_vkontakte_data(omniauth)
-      uid = omniauth["uid"].to_s
-      token = omniauth["credentials"]["token"]
-      { :uid => uid, :token => token, :provider => "vkontakte" }
+      { :uid => uid, :token => token, :secret => secret, :provider => omniauth["provider"]}
+    rescue
     end
 
   end
 
   def push_post(id, captcha = nil, captcha_id = nil)
-    case provider
-    when "twitter"
-      push_post_to_twitter(id)
-    when "facebook"
-      push_post_to_facebook(id)
-    when "vkontakte"
-      push_post_to_vkontakte(id, captcha, captcha_id)
-    end
+    __send__("push_post_to_#{provider}".to_sym, id, captcha, captcha_id)
   end
 
-  def push_post_to_twitter(id)
+  def push_post_to_twitter(id, captcha = nil, captcha_id = nil)
     post = Post.find(id)
     twitter_post = SocialPusher::Twitter::Post.new(token,secret)
     url = Rails.application.routes.url_helpers.post_url(id, :host => 'socialposter.local' )
@@ -71,7 +41,7 @@ class SocialService < ActiveRecord::Base
     vkontakte_post.create(post.body, captcha_data)
   end
 
-  def push_post_to_facebook(id)
+  def push_post_to_facebook(id, captcha = nil, captcha_id = nil)
     post = Post.find(id)
     facebook_post = SocialPusher::Facebook::Post.new(token, fb_page_id)
     facebook_post.create(post.body)

@@ -5,6 +5,7 @@ module SocialPusher
     require 'social_pusher/facebook'
     require 'social_pusher/twitter'
     require 'social_pusher/vkontakte'
+    require 'postable/base'
   end
 end
 

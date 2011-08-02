@@ -2,6 +2,8 @@ class Post < ActiveRecord::Base
 
   belongs_to :user
 
+  postable :to => [:twitter, :facebook], :as => :event
+
   def push_to_services(services)
     service_errors = {}
     services.each_value do |social_service|

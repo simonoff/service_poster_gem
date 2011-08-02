@@ -1,12 +1,16 @@
 module SocialPusher
   module Facebook
 
+    class BrokenTarget < Exception; end
+
     class Post
 
       class CannotCreatePost < Exception; end
 
-      def initialize(token, target)
-        @token = token
+      def initialize(params)
+        @token = params[:token]
+        raise BrokenTarget unless params[:target]
+        target = params[:target]
         @target = target + '/feed'
       end
 
@@ -28,7 +32,10 @@ module SocialPusher
       class BrokenEventParams < Exception; end
       class CannotCreateEvent < Exception; end
 
-      def initialize(token, target)
+      def initialize(params)
+        token = params[:token]
+        raise BrokenTarget unless params[:target]
+        target = params[:target]
         @target = target + '/events'
         if accounts = get_all_user_accounts(token)
           page_token = find_page_token(accounts, target)
