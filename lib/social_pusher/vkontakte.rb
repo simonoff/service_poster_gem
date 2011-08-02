@@ -1,17 +1,6 @@
 module SocialPusher
   module Vkontakte
 
-    module Params
-
-      def self.to_url(params)
-        elements = params.inject([]) do |memo, param|
-          memo << "#{param[0].to_s}=#{param[1].to_s}"
-        end
-        elements.join('&')
-      end
-
-    end
-
     class Post
 
       class CannotCreatePost < Exception; end
@@ -90,28 +79,10 @@ module SocialPusher
 
     end
 
-    class API
-
-      API_HOST = 'https://api.vkontakte.ru/method/'
-
-      def self.request(token, target, params = {})
-        path = API_HOST + target
-        params.merge!(:access_token => token)
-        params = Params.to_url(params)
-        path += "?#{params}"
-        path = URI.escape(path)
-        uri  = URI.parse(path)
-        resp = ""
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.start do |http|
-          req = Net::HTTP::Get.new("#{uri.path}?#{uri.query}", {"User-Agent" => "ServicePoster"})
-          response = http.request(req)
-          resp = response.body
-        end
-        return JSON.parse(resp)
+    class API < ::SocialPusher::HTTP
+      def self.api_host
+        'https://api.vkontakte.ru/method/'
       end
-
     end
 
   end

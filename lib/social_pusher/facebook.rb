@@ -1,20 +1,5 @@
-require 'net/http'
-require 'net/https'
-require 'json'
-
 module SocialPusher
   module Facebook
-
-    module Params
-
-      def self.to_url(params)
-        elements = params.inject([]) do |memo, param|
-          memo << "#{param[0].to_s}=#{param[1].to_s}"
-        end
-        elements.join('&')
-      end
-
-    end
 
     class Post
 
@@ -80,33 +65,10 @@ module SocialPusher
 
     end
 
-    module Graph
+    class Graph < ::SocialPusher::HTTP
 
-      GRAPH_HOST = "https://graph.facebook.com/"
-
-      def self.request(token, target, params = {}, post = false)
-        path = GRAPH_HOST + target
-        params.merge!(:access_token => token)
-        unless post
-          params = Params.to_url(params)
-          path += "?#{params}"
-        end
-        path = URI.escape(path)
-        uri  = URI.parse(path)
-        resp = ""
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.start do |http|
-          if post
-            req = Net::HTTP::Post.new("#{uri.path}", {"User-Agent" => "ServicePoster"})
-            req.set_form_data(params)
-          else
-            req = Net::HTTP::Get.new("#{uri.path}?#{uri.query}", {"User-Agent" => "ServicePoster"})
-          end
-          response = http.request(req)
-          resp = response.body
-        end
-        return JSON.parse(resp)
+      def self.api_host
+        "https://graph.facebook.com/"
       end
 
     end
